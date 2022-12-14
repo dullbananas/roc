@@ -2173,3 +2173,17 @@ fn issue_4749() {
         "###
     )
 }
+
+#[mono_test]
+fn order_list_size_tests_issue_4732() {
+    indoc!(
+        r###"
+        when [] is 
+            [1, ..]          -> "B1"
+            [2, 1, ..]       -> "B2"
+            [3, 2, 1, ..]    -> "B3"
+            [4, 3, 2, 1, ..] -> "B4"
+            _                -> "Catchall"
+        "###
+    )
+}
