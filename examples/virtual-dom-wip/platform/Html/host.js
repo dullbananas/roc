@@ -78,6 +78,17 @@ const init = async (initData, dynamicRootIds, wasmUrl) => {
     },
 
     /**
+     * @param {number} id
+     */
+    replaceNode: (oldId, newId) => {
+      const oldNode = nodes[oldId];
+      const newNode = nodes[newId];
+      const parent = oldNode.parentElement;
+      parent.replaceChild(newNode, oldNode);
+      nodes[oldId] = null;
+    },
+
+    /**
      * @param {number} nodeId
      * @param {number} typeAddr
      * @param {number} valueAddr
