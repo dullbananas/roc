@@ -5,7 +5,7 @@
 /**
  * @typedef {Object} RocWasmExports
  * @property {(size: number, alignment: number) => number} roc_alloc
- * @property {(jsonListAddr: number, jsonListLength: number, handlerId: number) => void} roc_dispatch_event
+ * @property {(jsonListAddr: number, jsonListLength: number, handlerId: number) => number} roc_dispatch_event
  * @property {() => number} main
  */
 
@@ -17,7 +17,7 @@
  * @param {string} initData
  * @param {string} wasmUrl
  */
-const init = async (initData, wasmUrl) => {
+const roc_init = async (initData, wasmUrl) => {
   /** @type {Array<Node | null>} */
   const nodes = [];
 
@@ -144,7 +144,11 @@ const init = async (initData, wasmUrl) => {
       const accessorsJson = decodeRocStr(accessorsJsonAddr);
       const accessors = JSON.parse(accessorsJson);
 
-      // Dispatch a DOM event to the specified handler function in Roc
+      /**
+       * Dispatch a DOM event to the specified handler function in Roc
+       * This closure captures handlerId and accessors
+       * @param {Event} ev
+       */
       const dispatchEvent = (ev) => {
         const outerListRcAddr = roc_alloc(4 + accessors.length * 12, 4);
         memory32[outerListRcAddr >> 2] = 1;
@@ -159,13 +163,30 @@ const init = async (initData, wasmUrl) => {
           memory32[outerListIndex32++] = capacity;
         });
 
-        roc_dispatch_event(outerListBaseAddr, accessors.length, handlerId);
+        const flags = roc_dispatch_event(
+          outerListBaseAddr,
+          accessors.length,
+          handlerId
+        );
+        if (flags & 2) {
+          ev.preventDefault();
+        }
+        if (flags & 1) {
+          ev.stopPropagation();
+        }
       };
 
       // Make things easier to debug
       dispatchEvent.name = `dispatchEvent${handlerId}`;
-      element.setAttribute("data-roc-event-handler-id", `${handlerId}`);
+      element.setAttribute(
+        `data-roc-event-handler-${eventType}`,
+        `${handlerId}`
+      );
 
+      // Ensure the array doesn't become sparse (shouldn't happen anyway)
+      while (handlerId > listeners.length) {
+        listeners.push(null);
+      }
       listeners[handlerId] = [eventType, dispatchEvent];
       element.addEventListener(eventType, dispatchEvent);
     },
@@ -285,5 +306,12 @@ const init = async (initData, wasmUrl) => {
 
   const { roc_vdom_init, roc_alloc, roc_dispatch_event } = app.exports;
   const initList = encodeJsString(initData);
-  roc_vdom_init(initList.pointer, initList.length, initList.capacity);
+  const initError = roc_vdom_init(
+    initList.pointer,
+    initList.length,
+    initList.capacity
+  );
+  if (initError) {
+    throw new Error("Failed to initialise Roc app");
+  }
 };
