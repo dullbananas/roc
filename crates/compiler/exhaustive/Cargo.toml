@@ -1,0 +1,14 @@
+[package]
+name = "roc_exhaustive"
+version = "0.0.1"
+authors = ["The Roc Contributors"]
+license = "UPL-1.0"
+edition = "2021"
+description = "Provides exhaustiveness checking for Roc."
+
+[dependencies]
+roc_collections = { path = "../collections" }
+roc_region = { path = "../region" }
+roc_module = { path = "../module" }
+roc_error_macros = { path = "../../error_macros" }
+roc_problem = { path = "../problem" }

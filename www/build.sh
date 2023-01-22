@@ -1,6 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -euxo pipefail
+
+# check if jq is installed
+jq --version
 
 # cd into the directory where this script lives.
 # This allows us to run this script from the root project directory,
@@ -11,21 +15,80 @@ cd $SCRIPT_RELATIVE_DIR
 rm -rf build/
 cp -r public/ build/
 
+# download fonts just-in-time so we don't have to bloat the repo with them.
+DESIGN_ASSETS_COMMIT="4d949642ebc56ca455cf270b288382788bce5873"
+DESIGN_ASSETS_TARFILE="roc-lang-design-assets-4d94964.tar.gz"
+DESIGN_ASSETS_DIR="roc-lang-design-assets-4d94964"
+
+wget -O $DESIGN_ASSETS_TARFILE https://github.com/roc-lang/design-assets/tarball/$DESIGN_ASSETS_COMMIT
+tar -xzf $DESIGN_ASSETS_TARFILE
+mv $DESIGN_ASSETS_DIR/fonts build/
+rm -rf $DESIGN_ASSETS_TARFILE $DESIGN_ASSETS_DIR
+
+# grab the source code and copy it to Netlify's server; if it's not there, fail the build.
+pushd build
+wget https://github.com/roc-lang/roc/archive/www.tar.gz
+
+# Download the latest pre-built Web REPL as a zip file. (Build takes longer than Netlify's timeout.)
+REPL_TARFILE="roc_repl_wasm.tar.gz"
+wget https://github.com/roc-lang/roc/releases/download/nightly/$REPL_TARFILE
+tar -xzf $REPL_TARFILE -C repl
+rm $REPL_TARFILE
+ls -lh repl
+
+popd
+
 pushd ..
-echo 'Generating docs...'
+echo 'Generating builtin docs...'
 cargo --version
 rustc --version
-# We run the CLI with --no-default-features because that way we don't have the
-# "llvm" feature and therefore don't depend on LLVM being installed on the
-# system. (Netlify's build servers have Rust installed, but not LLVM.)
-#
-# We set RUSTFLAGS to -Awarnings to ignore warnings during this build,
-# because when building without "the" llvm feature (which is only ever done
-# for this exact use case), the result is lots of "unused" warnings!
-#
+
 # We set ROC_DOCS_ROOT_DIR=builtins so that links will be generated relative to
 # "/builtins/" rather than "/" - which is what we want based on how the server
 # is set up to serve them.
-RUSTFLAGS=-Awarnings ROC_DOCS_URL_ROOT=builtins cargo run -p roc_cli --no-default-features docs compiler/builtins/docs/*.roc
-mv generated-docs/ www/build/builtins
+export ROC_DOCS_URL_ROOT=/builtins
+
+cargo run --release --bin roc-docs crates/compiler/builtins/roc/main.roc
+mv generated-docs/*.* www/build # move all the .js, .css, etc. files to build/
+mv generated-docs/ www/build/builtins # move all the folders to build/builtins/
+
+# Manually add this tip to all the builtin docs.
+find www/build/builtins -type f -name 'index.html' -exec sed -i 's!</nav>!<div class="builtins-tip"><b>Tip:</b> <a href="/different-names">Some names</a> differ from other languages.</div></nav>!' {} \;
+
+
+# cleanup files that could have stayed behind if the script failed
+rm -rf roc_nightly roc_releases.json
+
+echo 'Fetching latest roc nightly...'
+
+# to prevent GitHub from rate limiting netlify servers
+if ! [ -v GITHUB_TOKEN_READ_ONLY ]; then
+  curl https://api.github.com/repos/roc-lang/roc/releases > roc_releases.json
+else
+  curl --request GET \
+          --url https://api.github.com/repos/roc-lang/roc/releases \
+          -u $GITHUB_TOKEN_READ_ONLY \
+          --output roc_releases.json
+fi
+
+# get the url of the latest release
+export ROC_RELEASE_URL=$(./ci/get_latest_release_url.sh linux_x86_64)
+# get roc release archive
+curl -OL $ROC_RELEASE_URL
+# extract archive
+ls | grep "roc_nightly" | xargs tar --one-top-level=roc_nightly -xzvf
+# delete archive
+ls | grep "roc_nightly.*tar.gz" | xargs rm
+# TODO enable once new nightlies are uploaded
+# mv roc_nightly* roc_nightly
+
+echo 'Building tutorial.html from tutorial.md...'
+mkdir www/build/tutorial
+./roc_nightly/roc version
+./roc_nightly/roc run www/generate_tutorial/src/tutorial.roc -- www/generate_tutorial/src/input/ www/build/tutorial/
+mv www/build/tutorial/tutorial.html www/build/tutorial/index.html
+
+# cleanup
+rm -rf roc_nightly roc_releases.json
+
 popd

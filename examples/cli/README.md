@@ -1,8 +1,5 @@
-# Command Line Interface (CLI) Example
+# CLI examples
 
-This is an example of how to make an extremely basic CLI in Roc.
+**Note**: You probably will want to use the [`basic-cli` platform](https://github.com/roc-lang/basic-cli). This folder will be removed soon.
 
-There's not currently much documentation for the CLI platform (which also doesn't support many operations at this point!)
-but you can look at [the modules it includes](platform) - for example,
-multiple other modules use the [`Task`](platform/Task.roc) module, including the
-[`Stdin`](platform/Stdin.roc) and [`Stdout`](platform/Stdout.roc) modules.
+These are examples of how to make basic CLI (command-line interface) and TUI (terminal user interface) apps in Roc.

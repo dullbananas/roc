@@ -1,0 +1,37 @@
+{
+    "ignorePatterns": [
+        {
+            "pattern": "generated-docs"
+        },
+        {
+            "pattern": "http://127.0.0.1"
+        },
+        {
+            "pattern": "http://localhost"
+        },
+        {
+            "pattern": "https://crates.io"
+        },
+        {
+            "pattern": "https://docs.github.com"
+        },
+        {
+            "pattern": "https://opensource.org"
+        },
+        {
+            "pattern": "https://www.microsoft.com/en-us/research"
+        },
+        {
+            "pattern": "https://web.eecs.umich.edu"
+        },
+        {
+            "pattern": "http://0.0.0.0:8000"
+        },
+        {
+            "pattern": "/builtins"
+        },
+        {
+            "pattern": "https://www.10xeditor.com/"
+        }
+    ]
+}

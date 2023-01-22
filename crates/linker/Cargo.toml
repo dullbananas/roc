@@ -1,0 +1,36 @@
+[package]
+name = "roc_linker"
+version = "0.0.1"
+authors = ["The Roc Contributors"]
+license = "UPL-1.0"
+repository = "https://github.com/roc-lang/roc"
+edition = "2021"
+description = "A surgical linker for Roc"
+
+[lib]
+name = "roc_linker"
+path = "src/lib.rs"
+
+[dependencies]
+roc_mono = { path = "../compiler/mono" }
+roc_build = { path = "../compiler/build" }
+roc_collections = { path = "../compiler/collections" }
+roc_error_macros = { path = "../error_macros" }
+roc_load = { path = "../compiler/load" }
+roc_packaging = { path = "../packaging" }
+roc_reporting = { path = "../reporting" }
+
+bumpalo.workspace = true
+iced-x86.workspace = true
+memmap2.workspace = true
+object.workspace = true
+mach_object.workspace = true
+serde.workspace = true
+bincode.workspace = true
+target-lexicon.workspace = true
+tempfile.workspace = true
+
+
+[dev-dependencies]
+indoc.workspace = true
+libc.workspace = true

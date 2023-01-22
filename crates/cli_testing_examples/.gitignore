@@ -1,0 +1,7 @@
+*.dSYM
+libhost.a
+libapp.so
+dynhost
+preprocessedhost
+metadata
+expects-test

@@ -1,0 +1,67 @@
+[package]
+name = "test_gen"
+version = "0.0.1"
+authors = ["The Roc Contributors"]
+license = "UPL-1.0"
+edition = "2021"
+description = "Contains all of Roc's code generation tests."
+
+[[test]]
+name = "test_gen"
+path = "src/tests.rs"
+
+[build-dependencies]
+roc_builtins = { path = "../builtins" }
+roc_utils = { path = "../../utils" }
+wasi_libc_sys = { path = "../../wasi-libc-sys" }
+tempfile.workspace = true
+
+[dev-dependencies]
+roc_gen_llvm = { path = "../gen_llvm" }
+roc_gen_dev = { path = "../gen_dev" }
+roc_gen_wasm = { path = "../gen_wasm" }
+roc_collections = { path = "../collections" }
+roc_region = { path = "../region" }
+roc_module = { path = "../module" }
+roc_problem = { path = "../problem" }
+roc_types = { path = "../types" }
+roc_builtins = { path = "../builtins" }
+roc_constrain = { path = "../constrain" }
+roc_unify = { path = "../unify" }
+roc_utils = { path = "../../utils" }
+roc_solve = { path = "../solve" }
+roc_mono = { path = "../mono" }
+roc_packaging = { path = "../../packaging" }
+roc_reporting = { path = "../../reporting" }
+roc_load = { path = "../load" }
+roc_can = { path = "../can" }
+roc_parse = { path = "../parse" }
+roc_build = { path = "../build", features = ["target-aarch64", "target-x86_64", "target-wasm32"]  }
+roc_target = { path = "../roc_target" }
+roc_error_macros = { path = "../../error_macros" }
+roc_std = { path = "../../roc_std"  }
+roc_debug_flags = {path="../debug_flags"}
+roc_wasm_module = {path="../../wasm_module"}
+roc_wasm_interp = {path="../../wasm_interp"}
+
+bumpalo.workspace = true
+libc.workspace = true
+libloading.workspace = true
+criterion.workspace = true
+tempfile.workspace = true
+indoc.workspace = true
+lazy_static.workspace = true
+inkwell.workspace = true
+target-lexicon.workspace = true
+
+
+[features]
+default = ["gen-llvm"]
+gen-llvm = []
+gen-dev = []
+gen-wasm = []
+gen-llvm-wasm = ["gen-llvm"]
+
+[[bench]]
+name = "list_map"
+harness = false
